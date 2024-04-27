@@ -2,7 +2,7 @@ llm:
     name: "gpt-4-0125-preview"
     temperature: 0.01
 embedding:
-    name: "BAAI/bge-base-zh-v1.5"
+    name: "BAAI/bge-base-en-v1.5"
     dim: 768 
 rerank:
     name: "BAAI/bge-reranker-large"

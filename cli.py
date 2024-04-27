@@ -98,7 +98,7 @@ class CommandLine():
     def question_answer(self):
         self._executor.build_query_engine()
         while True: 
-            question = input("(rag) 问题: ")
+            question = input("(rag) Question: ")
             if question == 'quit':
                 print('(rag) 退出问答')
                 break

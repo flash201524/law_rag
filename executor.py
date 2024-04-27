@@ -26,33 +26,34 @@ from custom.zilliz.base import ZillizCloudPipelineIndex
 from llama_index.indices.query.schema import QueryBundle
 from llama_index.schema import BaseNode, ImageNode, MetadataMode
 
-from custom.history_sentence_window import HistorySentenceWindowNodeParser
+from llama_index.node_parser import SentenceWindowNodeParser
+#from custom.history_sentence_window import HistorySentenceWindowNodeParser  原版history    
 from custom.llms.QwenLLM import QwenUnofficial
 from custom.llms.GeminiLLM import Gemini
 from custom.llms.proxy_model import ProxyModel
 from pymilvus import MilvusClient
 
 QA_PROMPT_TMPL_STR = (
-    "请你仔细阅读相关内容，结合历史资料进行回答,每一条史资料使用'出处：《书名》原文内容'的形式标注 (如果回答请清晰无误地引用原文,先给出回答，再贴上对应的原文，使用《书名》[]对原文进行标识),，如果发现资料无法得到答案，就回答不知道 \n"
-    "搜索的相关历史资料如下所示.\n"
+    "Please read the relevant legal content carefully and answer in conjunction with the materials. For each piece of legal material, use the format 'Source: Title of the Book original content'. (If answering, please quote the original text clearly and correctly, first provide the answer, then paste the corresponding original text, and mark the original text with Title of the Book []). If it is found that the answer cannot be obtained from the materials, then respond with a most relevant answer with the previous format and stress that you're not sure. \n"
+    "The relevant information for the search is shown below.\n"
     "---------------------\n"
     "{context_str}\n"
     "---------------------\n"
-    "问题: {query_str}\n"
-    "答案: "
+    "Question: {query_str}\n"
+    "\nAnswer: "
 )
 
-QA_SYSTEM_PROMPT = "你是一个严谨的历史知识问答智能体，你会仔细阅读历史材料并给出准确的回答,你的回答都会非常准确，因为你在回答的之后，使用在《书名》[]内给出原文用来支撑你回答的证据.并且你会在开头说明原文是否有回答所需的知识"
+QA_SYSTEM_PROMPT = "You are a meticulous legal knowledge Q&A intelligent agent. You will carefully read the materials and provide accurate answers. Your answers will be very precise because, after answering, you use the original text provided in the book title [ ] as evidence to support your answer. Moreover, you will state at the beginning whether the original text contains the knowledge needed to answer the question."
 
 REFINE_PROMPT_TMPL_STR = ( 
-    "你是一个历史知识回答修正机器人，你严格按以下方式工作"
-    "1.只有原答案为不知道时才进行修正,否则输出原答案的内容\n"
-    "2.修正的时候为了体现你的精准和客观，你非常喜欢使用《书名》[]将原文展示出来.\n"
-    "3.如果感到疑惑的时候，就用原答案的内容回答。"
-    "新的知识: {context_msg}\n"
-    "问题: {query_str}\n"
-    "原答案: {existing_answer}\n"
-    "新答案: "
+    "You are a legal knowledge answer correction robot, and you work strictly in the following manner:"
+    "1. Corrections are only made when the original answer is 'do not know'; otherwise, the content of the original answer is outputted.\n"
+    "2. When making corrections, in order to reflect your accuracy and objectivity, you are very fond of using '《Book Title》' [] to display the original text.\n"
+    "3. If you feel confused, then respond with the content of the original answer."
+    "New knowledge: {context_msg}\n"
+    "Question: {query_str}\n"
+    "Old answer: {existing_answer}\n"
+    "New answer: "
 )
 
 def is_valid_url(url):
@@ -120,7 +121,7 @@ class MilvusExecutor(Executor):
         self.index = None
         self.query_engine = None
         self.config = config
-        self.node_parser = HistorySentenceWindowNodeParser.from_defaults(
+        self.node_parser = SentenceWindowNodeParser.from_defaults(#更改了
             sentence_splitter=lambda text: re.findall("[^,.;。？！]+[,.;。？！]?", text),
             window_size=config.milvus.window_size,
             window_metadata_key="window",
